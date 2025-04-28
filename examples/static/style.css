@@ -1,0 +1,37 @@
+/*
+@cryptpad_color_brand: #0087FF;
+*/
+
+html {
+    font: 16px 'Open Sans', 'Helvetica Neue', sans-serif;
+    color: #212121;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+#editor-title, #editor-form, #upload-form {
+    padding: 15px;
+    margin: 0;
+}
+
+#editor {
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+    #editor-container {
+        flex: 1;
+        iframe {
+            box-sizing: border-box;
+        }
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    html {
+        background-color: #212121;
+        color: #EEEEEE;
+    }
+}

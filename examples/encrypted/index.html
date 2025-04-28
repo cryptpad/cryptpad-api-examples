@@ -1,0 +1,41 @@
+ <!DOCTYPE html>
+<html>
+<head>
+    <title>End-to-end encrypted example</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/components/nacl-fast.min.js" type="text/javascript"></script>
+    <script src="/components/nacl-util.min.js" type="text/javascript"></script>
+    <script src="http://localhost:3000/cryptpad-api.js" type="text/javascript"></script>
+    <script async src="main.js" type="text/javascript"></script>
+</head>
+<body>
+
+<div id="upload">
+    <h1>Upload a new document</h1>
+    <label for="upload-file">File</label>
+    <br>
+    <input type="file" id="upload-file"
+           accept=".xlsx,.docx,.pptx,.drawio,.md"/>
+    <br>
+    <label for="upload-pw">Password</label>
+    <br>
+    <input type="text" id="upload-pw"/>
+    <br>
+    <button id="upload-submit">Upload</button>
+</div>
+
+<div id="editor">
+    <h1 id="editor-title">Document editor</h1>
+    <div id="editor-form">
+        <label for="editor-pw">Enter document password</label>
+        <br>
+        <input type="text" id="editor-pw"/>
+        <br>
+        <button id="editor-submit">Submit</button>
+    </div>
+    <div id="editor-container"></div>
+</div>
+
+</body>
+</html>
+

@@ -1,0 +1,17 @@
+{
+  "name": "cryptpad-api-examples",
+  "version": "1.0.0",
+  "description": "",
+  "license": "AGPL-3.0+",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cryptpad/cryptpad-api-examples.git"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
