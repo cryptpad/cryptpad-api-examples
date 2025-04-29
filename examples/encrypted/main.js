@@ -1,154 +1,88 @@
 (() => {
-const Nacl = window.nacl;
-const API = window.CryptPadAPI;
+const CryptPadAPI = window.CryptPadAPI;
+const Editor = window.CryptPad_editor;
 
-// View
+const { getSessionKey,
+        sanitizeHTML,
+        saveFile,
+        getMetadata,
+        getDecryptedFile } = window.CryptPad_utils;
+
+// Manage views
 const hash = window.location.hash;
 const docId = hash && Number(hash.slice(1));
 const editor = document.getElementById('editor');
 const editorForm = document.getElementById('editor-form');
 const upload = document.getElementById('upload');
 if (hash) {
-    upload.setAttribute('style', 'display:none');
-} else {
-    editor.setAttribute('style', 'display:none');
-}
-if (hash) {
+    // editor view
+    document.body.setAttribute('class', 'editor');
     document.getElementById('editor-title').innerHTML = `Editing document ${hash}`;
-}
-
-
-// Encryption
-const encrypt = (content, pw) => {
-    const key = Nacl.hash(Nacl.util.decodeUTF8(pw)).subarray(0,32);
-    const nonce = Nacl.randomBytes(24);
-    const packed = Nacl.secretbox(content, nonce, key);
-    return `${Nacl.util.encodeBase64(nonce)}|${Nacl.util.encodeBase64(packed)}`;
-};
-const decrypt = (contentStr, pw) => {
-    const key = Nacl.hash(Nacl.util.decodeUTF8(pw)).subarray(0,32);
-    const arr = contentStr.split('|');
-    const nonce = Nacl.util.decodeBase64(arr[0]);
-    const packed = Nacl.util.decodeBase64(arr[1]);
-    return Nacl.secretbox.open(packed, nonce, key);
-};
-const encodeB64 = json => {
-    const str = JSON.stringify(json);
-    const uint8 = Nacl.util.decodeUTF8(str);
-    return Nacl.util.encodeBase64(uint8);
-};
-const decodeB64 = b64 => {
-    const uint8 = Nacl.util.decodeBase64(b64);
-    const str = Nacl.util.encodeUTF8(uint8);
-    return JSON.parse(str);
-};
-
-// Basic upload to server
-const postToServer = (file, pw, id) => {
-    return new Promise((resolve) => {
-        file.arrayBuffer().then(buffer => {
-            let u8 = new Uint8Array(buffer);
-            let encrypted = encrypt(u8, pw);
-            let metadata = {
-                name: file.name,
-                type: file.type
-            };
-            let content = `${encodeB64(metadata)}|${encrypted}`;
-            let queryStr = id ? `?id=${id}` : '';
-            fetch("/upload"+queryStr, {
-                method: 'POST',
-                body: content
-            })
-            .then(response => response.json())
-            .then(json => {
-                resolve(json);
-            }).catch(e => {
-                reject(e);
-            });
-        });
+    getMetadata(docId).then(md => {
+        console.error(md);
+        document.getElementById('editor-title').innerHTML = `Editing document <em>${sanitizeHTML(md.name)}</em>`;
+    }).catch(e => {
+        if (e === 404) {
+            alert("404: Not found");
+            window.location.hash = '';
+            window.location.reload();
+        }
     });
-};
+}
+const backLink = document.getElementById('back-link');
+backLink.addEventListener('click', e => {
+    e.preventDefault();
+    window.location.hash = '';
+    window.location.reload();
+});
 
 
 // EDITOR
-
-const apps = {
-    'md': 'code',
-    'xlsx': 'sheet',
-    'pptx': 'presentation',
-    'docx': 'doc',
-    'drawio': 'diagram'
-};
-const getApp = ext => {
-    return apps[ext];
-};
-const getKey = (id, pw) => {
-    const str = id + pw;
-    const h = Nacl.hash(Nacl.util.decodeUTF8(str)).subarray(0,18);
-    return Nacl.util.encodeBase64(h).replace(/\//g, '-').replace(/=+$/g, '');
-};
-const startEditor = (name, pw, blob) => {
-    const docUrl = URL.createObjectURL(blob);
-    const ext = name.split('.').pop();
-    editorForm.remove();
-    API('editor-container', {
-        document: {
-            url: docUrl,
-            key: getKey(docId, pw),
-            fileType: ext
-        },
-        documentType: getApp(ext),
-        editorConfig: {},
-        events: {
-            onSave: (data, cb) => {
-                const blob = data;
-                blob.name = name;
-                postToServer(blob, pw, docId).then(json => {
-                    console.error(json);
-                    cb();
-                }).catch(err => {
-                    console.error(err);
-                });
-
-            }
-        }
-    });
-};
-
-
-
-// Get decrypted document
-const fetchFromServer = id => {
-    return new Promise((resolve) => {
-        fetch(`/data/${id}`)
-        .then(response => response.text())
-        .then(b64 => {
-            resolve(b64);
-        }).catch(e => {
-            reject(e);
-        });
-    });
-};
-
-// Manage password field
+// Editor password form
 const editorButton = document.getElementById('editor-submit');
 const editorPassword = document.getElementById('editor-pw');
+const savingState = document.getElementById('state');
 editorButton.addEventListener('click', () => {
     let pw = editorPassword.value;
-    fetchFromServer(docId).then(str => {
-        const idx = str.indexOf('|');
-        const metadata64 = str.slice(0, str.indexOf('|'));
-        const metadata = decodeB64(metadata64);
-        const content = str.slice(idx+1);
-        const u8 = decrypt(content, pw);
-        if (!u8) {
-            return void alert('Invalid password');
-        }
+    getDecryptedFile(docId, pw).then(data => {
+        const { metadata, u8 } = data;
+
+        // Create Blob from decrypted data
         const blob = new Blob([u8], {
             type: metadata.type
         });
+        blob.name = metadata.name;
 
-        startEditor(metadata.name, pw, blob);
+        // Remove password form
+        editorForm.remove();
+
+        // Extract session key from password
+        const key = getSessionKey(docId, pw);
+
+        // Create save handler
+        const onSave = (data, cb) => {
+            const blob = data;
+            blob.name = metadata.name;
+            blob.type = metadata.type;
+            saveFile(blob, pw, docId).then(json => {
+                console.error(json);
+                cb();
+            }).catch(err => {
+                console.error(err);
+            });
+        };
+        const onHasUnsavedChanges = (unsaved, cb) => {
+            if (unsaved) {
+                savingState.innerText = "The document has unsaved changes, please wait...";
+                return;
+            }
+            savingState.innerText = "The document is saved";
+        };
+
+        const events = { onHasUnsavedChanges, onSave };
+
+        // Call the API
+        Editor.start(blob, key, events);
     }).catch(err => {
         console.error(err);
     });
@@ -156,7 +90,6 @@ editorButton.addEventListener('click', () => {
 
 
 // UPLOAD
-
 // Upload form
 const uploadButton = document.getElementById('upload-submit');
 const uploadFile = document.getElementById('upload-file');
@@ -168,12 +101,74 @@ uploadButton.addEventListener('click', () => {
         alert('Missing file');
         return;
     }
-    postToServer(file, pw).then(json => {
+    saveFile(file, pw).then(json => {
         console.error(json);
-        // XXX show ID or redirect to file
+        window.location.hash = String(json.id);
+        window.location.reload();
     }).catch(err => {
         console.error(err);
     });
 });
+
+// List documents
+const listAll = document.getElementById('list-all');
+if (!hash) {
+    listDocuments().then(json => {
+        if (!Object.keys(json).length) { return; }
+        let table = document.createElement('table');
+        let head = document.createElement('tr');
+        ['Name', 'Creation time', 'Last modified', 'Download'].forEach(txt => {
+            let th = document.createElement('th');
+            th.innerText = txt;
+            head.appendChild(th);
+        });
+        table.appendChild(head);
+        Object.keys(json).forEach(id => {
+            let tr = document.createElement('tr');
+            let td1 = document.createElement('td');
+            let td2 = document.createElement('td');
+            let td3 = document.createElement('td');
+            let td4 = document.createElement('td');
+            td1.innerHTML = `<a href="/encrypted#${id}">
+${json[id]?.metadata?.name}
+</a>`;
+            td2.innerText = new Date(json[id].stat.ctime).toLocaleString();
+            td3.innerText = new Date(json[id].stat.mtime).toLocaleString();
+            td4.innerHTML = `<button class="file-dl"><img class="download-icon" src="/static/download.svg" alt="Download" /></button>`;
+            tr.appendChild(td1);
+            tr.appendChild(td2);
+            tr.appendChild(td3);
+            tr.appendChild(td4);
+            table.appendChild(tr);
+
+            const button = td4.children[0];
+            if (!button) { return; }
+            button.addEventListener('click', e => {
+                const pw = prompt('Please enter the file password');
+                getDecryptedFile(id, pw).then(data => {
+                    const { metadata, u8 } = data;
+                    if (!u8) { return; }
+                    const blob = new Blob([u8], {
+                        type: metadata.type
+                    });
+                    const a = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    a.href = url;
+                    a.download = metadata.name;
+                    a.click();
+                    setTimeout(() => {
+                      window.URL.revokeObjectURL(url);
+                    }, 0)
+                }).catch(e => {
+                    alert(e.message || e);
+                });
+            });
+        });
+        listAll.appendChild(table);
+    }).catch(e => {
+        console.error(e);
+    });
+
+}
 
 })();

@@ -6,26 +6,39 @@
     <script src="/components/nacl-fast.min.js" type="text/javascript"></script>
     <script src="/components/nacl-util.min.js" type="text/javascript"></script>
     <script src="http://localhost:3000/cryptpad-api.js" type="text/javascript"></script>
+    <script src="utils.js" type="text/javascript"></script>
+    <script src="editor.js" type="text/javascript"></script>
     <script async src="main.js" type="text/javascript"></script>
 </head>
-<body>
+<body class="upload">
 
-<div id="upload">
+<div id="logo">
+    <img src="/static/CryptPad_logo.svg" alt="CryptPad logo" />
+</div>
+
+<div id="upload" class="main">
     <h1>Upload a new document</h1>
     <label for="upload-file">File</label>
     <br>
     <input type="file" id="upload-file"
-           accept=".xlsx,.docx,.pptx,.drawio,.md"/>
+           accept=".xlsx,.docx,.pptx,.drawio,.md"
+           autocomplete="off"/>
     <br>
     <label for="upload-pw">Password</label>
     <br>
-    <input type="text" id="upload-pw"/>
+    <input type="text" id="upload-pw" autocomplete="off"/>
     <br>
     <button id="upload-submit">Upload</button>
 </div>
+<div id="list" class="main">
+    <h1>Existing documents</h1>
+    <div id="list-all"></div>
+</div>
 
-<div id="editor">
+<div id="editor" class="main">
     <h1 id="editor-title">Document editor</h1>
+    <div id="back"><a id="back-link" href="/encrypted">Back to all files</a></div>
+    <div id="state"></div>
     <div id="editor-form">
         <label for="editor-pw">Enter document password</label>
         <br>
