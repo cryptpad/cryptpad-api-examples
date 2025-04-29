@@ -16,7 +16,7 @@ const start = (file, sessionKey, events) => {
 
     const { onHasUnsavedChanges, onSave } = events;
 
-    CryptPadAPI(containerId, {
+    window.CryptPadAPI(containerId, {
         document: {
             url: docUrl,
             key: sessionKey,

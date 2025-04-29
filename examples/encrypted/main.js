@@ -1,5 +1,4 @@
 (() => {
-const CryptPadAPI = window.CryptPadAPI;
 const Editor = window.CryptPad_editor;
 
 const { getSessionKey,
