@@ -80,7 +80,7 @@ async function readFile(filePath) {
         metadata: md,
         stat: {
             mtime: +stat?.mtime,
-            ctime: +stat?.ctime
+            ctime: +stat?.birthtime || +stat?.ctime
         }
     };
 }
