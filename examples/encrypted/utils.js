@@ -1,3 +1,4 @@
+(() => {
 const Nacl = window.nacl;
 
 // Encryption functions
@@ -161,3 +162,4 @@ window.CryptPad_utils = {
     sanitizeHTML
 };
 
+})();

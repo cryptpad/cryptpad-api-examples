@@ -30,9 +30,14 @@ body {
     }
 }
 
+* {
+    box-sizing: border-box;
+}
+h1 {
+    margin: 20px 0;
+}
+
 #editor-title, #editor-form, #upload, #list {
-    padding: 15px;
-    margin: 0;
     min-width: 600px;
     box-sizing: border-box;
 }
@@ -43,6 +48,9 @@ body {
     flex-flow: column;
     &:has(#cryptpad-editor) {
         width: 100%;
+        #editor-title {
+            padding: 0 15px;
+        }
     }
     #cryptpad-editor {
         border: 0;
@@ -55,7 +63,8 @@ body {
         }
     }
     #back {
-        padding: 0 15px;
+        margin-top: -15px;
+        margin-bottom: 15px;
     }
 }
 #state {
@@ -65,6 +74,18 @@ body {
     padding-left: 15px;
     padding-bottom: 5px;
     margin-top: -10px;
+}
+#share {
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    margin: 5px 0;
+    input {
+        margin: 0 0 0 10px;
+        flex: 1;
+        min-width: 0;
+        max-width: 600px;
+    }
 }
 
 body.editor {
@@ -78,13 +99,17 @@ body.editor {
         }
         #state {
             display: block;
+            &:empty {
+                display: none;
+            }
         }
         #back {
             position: absolute;
             right: 15px;
             top: 0;
-            height: 68px;
+            height: 78px;
             line-height: 68px;
+            margin: 0;
         }
     }
 }
@@ -118,6 +143,7 @@ body.editor {
         }
     }
 }
+
 #upload {
     display: none;
     flex-flow: column;
@@ -129,7 +155,7 @@ body.upload {
     }
 }
 
-input {
+input, textarea {
     margin-bottom: 0.5em;
     height: 32px;
     padding: 0;
@@ -143,6 +169,10 @@ input {
     color: #424242;
     background-color: #F5F5F5;
     border-color: #0087FF;
+}
+textarea {
+    line-height: unset;
+    height: 128px;
 }
 button:not(.file-dl) {
     cursor: pointer;
@@ -166,7 +196,7 @@ button:not(.file-dl) {
         a {
             color: #99cfff;
         }
-        input {
+        input, textarea {
             color: #EEEEEE;
             background-color: #616161;
             border-color: #99cfff;
@@ -178,6 +208,9 @@ button:not(.file-dl) {
 }
 
 #main-list {
-    list-style-type: none;
     padding: 0;
+    font-size: 18px;
+    li {
+        padding: 10px 0;
+    }
 }

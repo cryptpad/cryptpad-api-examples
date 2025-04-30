@@ -1,34 +1,23 @@
-(() => {
-const apps = {
-    'md': 'code',
-    'xlsx': 'sheet',
-    'pptx': 'presentation',
-    'docx': 'doc',
-    'drawio': 'diagram'
-};
-const getApp = ext => {
-    return apps[ext];
-};
-
-const start = (file, sessionKey, events) => {
+const start = (file, events) => {
     const docUrl = URL.createObjectURL(file); // create download url
     const ext = file.name.split('.').pop(); // extract extension
     const containerId = 'editor-container';
 
-    const { onHasUnsavedChanges, onSave } = events;
+    const { onHasUnsavedChanges, onSave, onNewKey } = events;
 
     window.CryptPadAPI(containerId, {
         document: {
             url: docUrl,
-            key: sessionKey,
-            fileType: ext,
+            //key: sessionKey,
+            fileType: '.md',
             title: file.name
         },
-        documentType: getApp(ext),
+        documentType: 'code',
         editorConfig: {
             
         },
         events: {
+            onNewKey, // Called when we receive a session key
             onHasUnsavedChanges, // Called when we need to save
             onSave // called when the autosave if triggered
         },
@@ -39,5 +28,3 @@ const start = (file, sessionKey, events) => {
 window.CryptPad_editor = {
     start
 };
-
-})();
