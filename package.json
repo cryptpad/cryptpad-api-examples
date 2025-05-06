@@ -2,7 +2,7 @@
   "name": "cryptpad-api-examples",
   "version": "1.0.0",
   "description": "",
-  "license": "AGPL-3.0+",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cryptpad/cryptpad-api-examples.git"
