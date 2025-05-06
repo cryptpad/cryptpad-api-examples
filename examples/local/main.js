@@ -89,7 +89,7 @@ views.edit = () => {
                         console.error(err);
                     });
                 };
-                const onHasUnsavedChanges = (unsaved, cb) => {
+                const onHasUnsavedChanges = (unsaved) => {
                     if (unsaved) {
                         savingState.innerText = "The document has unsaved changes, please wait...";
                         return;
