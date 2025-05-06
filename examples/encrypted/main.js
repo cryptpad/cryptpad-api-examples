@@ -109,6 +109,7 @@ views.edit = () => {
                 // Start the collaborative session
                 Editor.start(blob, key, events);
             }).catch(err => {
+                alert(err);
                 console.error(err);
             });
         }).catch(err => {
