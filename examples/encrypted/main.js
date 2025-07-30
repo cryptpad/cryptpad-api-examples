@@ -2,6 +2,7 @@
 const Editor = window.CryptPad_editor;
 
 const { getSessionKey,
+        getViewKey,
         sanitizeHTML,
         saveFile,
         getMetadata,
@@ -54,12 +55,14 @@ views.edit = () => {
     // Editor password form
     const editorButton = document.getElementById('editor-submit');
     const editorPassword = document.getElementById('editor-pw');
+    const editorView = document.getElementById('editor-view-mode');
     const editorInstance = document.getElementById('editor-instance');
     const savingState = document.getElementById('state');
     // On submit, load the API, get the file and start the session
     editorButton.addEventListener('click', () => {
         let pw = editorPassword.value;
         let instance = editorInstance.value;
+        let view = editorView.checked;
         let origin = new URL(instance).origin;
         let url = `${origin}/cryptpad-api.js`;
         // load API from the selected CryptPad instance
@@ -82,7 +85,11 @@ views.edit = () => {
                 editorForm.remove();
 
                 // Extract session key from password
-                const key = getSessionKey(docId, pw);
+                let key = getSessionKey(docId, pw);
+
+                if (view) {
+                    key = getViewKey(key);
+                }
 
                 // Create save handler
                 const onSave = (data, cb) => {
@@ -107,7 +114,7 @@ views.edit = () => {
                 const events = { onHasUnsavedChanges, onSave };
 
                 // Start the collaborative session
-                Editor.start(blob, key, events);
+                Editor.start(blob, key, view, events);
             }).catch(err => {
                 alert(err);
                 console.error(err);

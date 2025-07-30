@@ -4,12 +4,15 @@ const Editor = window.CryptPad_editor;
 const { getFile,
         sanitizeHTML,
         saveFile,
+        saveKey,
+        getKey,
         getTitle,
         listDocuments } = window.CryptPad_utils;
 
 const views = {};
 const hash = window.location.hash;
-const docId = hash && Number(hash.slice(1));
+const docId = hash && Number(hash.slice(1).replace(/-(.+)$/, ''));
+const isView = /view$/.test(hash);
 const editor = document.getElementById('editor');
 const editorForm = document.getElementById('editor-form');
 const upload = document.getElementById('upload');
@@ -55,6 +58,7 @@ views.edit = () => {
     const editorInstance = document.getElementById('editor-instance');
     const savingState = document.getElementById('state');
     const share = document.getElementById('share');
+    const viewshare = document.getElementById('viewshare');
     editorButton.addEventListener('click', () => {
         let instance = editorInstance.value;
         let origin = new URL(instance).origin;
@@ -97,7 +101,18 @@ views.edit = () => {
                     savingState.innerText = "The document is saved";
                 };
                 const onNewKey = (data, cb) => {
+                    console.error(data);
                     const key = data.new;
+                    const view = data.view;
+                    const keys = {
+                        edit: key,
+                        view
+                    };
+                    saveKey(keys, docId).then(() => {
+                    }).catch(err => {
+                        console.error(err);
+                    });
+
                     share.innerText = "Share link:";
                     const input = document.createElement('input');
                     input.setAttribute('readonly', 'readonly');
@@ -106,13 +121,27 @@ views.edit = () => {
                         input.select();
                     });
                     share.appendChild(input);
+
+                    viewshare.innerText = "View Share link:";
+                    const viewinput = document.createElement('input');
+                    viewinput.setAttribute('readonly', 'readonly');
+                    viewinput.value =`${instance}/code/#${view}embed`;
+                    viewinput.addEventListener('focus', () => {
+                        viewinput.select();
+                    });
+                    viewshare.appendChild(viewinput);
+
                     cb(key);
                 };
 
                 const events = { onHasUnsavedChanges, onSave, onNewKey };
 
                 // Call the API
-                Editor.start(blob, events);
+                getKey(docId).then(keys => {
+                    Editor.start(keys, blob, isView, events);
+                }).catch(err => {
+                    console.error(err);
+                });
             }).catch(err => {
                 console.error(err);
             });

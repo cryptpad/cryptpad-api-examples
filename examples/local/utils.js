@@ -81,6 +81,32 @@ const getFile = (id) => {
         }
     });
 };
+const saveKey = (keys, id) => {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            return void reject('NO_ID');
+        }
+        try {
+            localStorage.setItem(`CP_keys_${id}`, encodeB64(keys));
+            resolve();
+        } catch (e) {
+            reject(e);
+        }
+    });
+};
+const getKey = (id) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const data = localStorage.getItem(`CP_keys_${id}`)
+            if (!data) { return resolve({}); }
+            const json = decodeB64(data);
+            resolve(json);
+        } catch (e) {
+            reject(e);
+        }
+    });
+};
+
 const getTitle = (id) => {
     return new Promise((resolve, reject) => {
         try {
@@ -107,6 +133,8 @@ window.CryptPad_utils = {
     getTitle,
     getFile,
     saveFile,
+    saveKey,
+    getKey,
     sanitizeHTML
 };
 

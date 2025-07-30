@@ -1,18 +1,20 @@
-const start = (file, events) => {
+const start = (keys, file, view, events) => {
     const docUrl = URL.createObjectURL(file); // create download url
     const ext = file.name.split('.').pop(); // extract extension
     const containerId = 'editor-container';
 
     const { onHasUnsavedChanges, onSave, onNewKey } = events;
 
+    const key = view ? keys?.view : keys?.edit;
     window.CryptPadAPI(containerId, {
         document: {
             url: docUrl,
-            //key: sessionKey,
+            key: key,
             fileType: '.md',
             title: file.name
         },
         documentType: 'code',
+        mode: view ? 'view' : 'edit',
         editorConfig: {
             
         },

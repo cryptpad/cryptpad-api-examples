@@ -75,7 +75,7 @@ h1 {
     padding-bottom: 5px;
     margin-top: -10px;
 }
-#share {
+#share, #viewshare {
     display: flex;
     align-items: center;
     padding: 0 15px;

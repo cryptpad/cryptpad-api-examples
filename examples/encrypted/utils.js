@@ -98,7 +98,6 @@ const download = id => {
         })
         .then(response => response.text())
         .then(str => {
-            console.error(str);
             cache[id] = str;
             resolve(str);
         }).catch(e => {
@@ -152,12 +151,24 @@ const sanitizeHTML = function (str) {
     });
 };
 
+var decodeBase64 = str => {
+    let i;
+    if (i = str.length % 4) { str += '='.repeat(4-i); }
+    return Nacl.util.decodeBase64(str);
+};
+const getViewKey = key => {
+    const seed = decodeBase64(key.replace(/-/g, '/'));
+    const hash = Nacl.hash(seed);
+    const viewSeed = hash.subarray(32, 64);
+    return Nacl.util.encodeBase64(viewSeed).replace(/\//g, '-').replace(/=+$/g, '');
+};
 
 window.CryptPad_utils = {
     listDocuments,
     getSessionKey,
     saveFile,
     getMetadata,
+    getViewKey,
     getDecryptedFile,
     sanitizeHTML
 };
