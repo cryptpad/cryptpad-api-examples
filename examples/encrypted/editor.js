@@ -10,14 +10,14 @@ const getApp = ext => {
     return apps[ext];
 };
 
-const start = (file, sessionKey, view, events) => {
+const start = (file, sessionKey, opts, events) => {
     const docUrl = URL.createObjectURL(file); // create download url
     const ext = file.name.split('.').pop(); // extract extension
     const containerId = 'editor-container';
+    const { name, view } = opts;
 
-    const { onHasUnsavedChanges, onSave } = events;
+    const { onHasUnsavedChanges, onUserlistChange, onSave } = events;
 
-    view = true;
     window.CryptPadAPI(containerId, {
         document: {
             url: docUrl,
@@ -32,7 +32,8 @@ const start = (file, sessionKey, view, events) => {
         documentType: getApp(ext),
         editorConfig: {
             user: {
-                name: 'PEZPEZ'
+                name: name,
+                jwt: 'TOKEN-EXAMPLE-' + name
             }
         },
         events: {
@@ -40,6 +41,7 @@ const start = (file, sessionKey, view, events) => {
                 console.error('READY OUTSIDE')
             },
             onHasUnsavedChanges, // Called when we need to save
+            onUserlistChange,
             onSave // called when the autosave if triggered
         },
         autosave: 10 // autosave after 10s without a change

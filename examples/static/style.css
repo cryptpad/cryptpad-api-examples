@@ -67,6 +67,10 @@ h1 {
         margin-bottom: 15px;
     }
 }
+#userlist-container {
+    display: none;
+    margin: 0 15px 5px;
+}
 #state {
     display: none;
     font-style: italic;
@@ -169,6 +173,12 @@ input, textarea {
     color: #424242;
     background-color: #F5F5F5;
     border-color: #0087FF;
+
+    &[type="checkbox"] {
+        height: 16px;
+        width: 16px;
+        margin: 10px 0 15px;
+    }
 }
 textarea {
     line-height: unset;

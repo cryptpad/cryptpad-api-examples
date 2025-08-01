@@ -55,12 +55,21 @@ views.edit = () => {
     // Editor password form
     const editorButton = document.getElementById('editor-submit');
     const editorPassword = document.getElementById('editor-pw');
+    const editorName = document.getElementById('editor-name');
     const editorView = document.getElementById('editor-view-mode');
     const editorInstance = document.getElementById('editor-instance');
     const savingState = document.getElementById('state');
+    const userList = document.getElementById('userlist-container');
+    const userListEdit = document.getElementById('userlist-edit');
+    const userListView = document.getElementById('userlist-view');
+
+    const rand = Math.floor(Math.random()*10000);
+    const randUid = String(rand).padStart(4, '0');
+    editorName.value = "Guest-"+ randUid;
     // On submit, load the API, get the file and start the session
     editorButton.addEventListener('click', () => {
         let pw = editorPassword.value;
+        let name = editorName.value;
         let instance = editorInstance.value;
         let view = editorView.checked;
         let origin = new URL(instance).origin;
@@ -110,11 +119,30 @@ views.edit = () => {
                     }
                     savingState.innerText = "The document is saved";
                 };
+                const onUserlistChange = data => {
+                    userList.setAttribute('style', 'display:block;');
 
-                const events = { onHasUnsavedChanges, onSave };
+                    const keys = Object.keys(data || {});
+                    userListEdit.innerText = keys.filter(id => {
+                        return !data[id]?.readOnly;
+                    }).map(id => {
+                        return data[id]?.name;
+                    }).join(', ');
+
+                    userListView.innerText = keys.filter(id => {
+                        return data[id]?.readOnly;
+                    }).map(id => {
+                        return data[id]?.name;
+                    }).join(', ');
+                };
+
+                const events = { onHasUnsavedChanges, onUserlistChange, onSave };
 
                 // Start the collaborative session
-                Editor.start(blob, key, view, events);
+                Editor.start(blob, key, {
+                    name,
+                    view
+                }, events);
             }).catch(err => {
                 alert(err);
                 console.error(err);

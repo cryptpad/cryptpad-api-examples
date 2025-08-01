@@ -39,10 +39,21 @@
     <h1 id="editor-title">Document editor</h1>
     <div id="back"><a id="back-link" href="/encrypted">Back to all files</a></div>
     <div id="state"></div>
+    <div id="userlist-container">
+        <strong>Editors:</strong>
+        <span id="userlist-edit"></span>
+        <br>
+        <strong>Viewers:</strong>
+        <span id="userlist-view"></span>
+    </div>
     <div id="editor-form">
         <label for="editor-pw">Enter document password</label>
         <br>
         <input type="text" id="editor-pw"/>
+        <br>
+        <label for="editor-name">Username</label>
+        <br>
+        <input type="text" id="editor-name"/>
         <br>
         <label for="editor-instance">CryptPad instance</label>
         <br>
