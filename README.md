@@ -45,6 +45,10 @@ These examples can be tested here: https://api-examples.dev.cryptpad.net/
     * The collaborative session key.
     * If you don't provide one, users will join a new session. The API will provide a new session key that can be shared with other users to edit the same document.
     * See the **Managing keys** section for further details
+* `config.mode`: string - **optional**
+  * Specify if the document should be loaded in read-only mode or if it should be editable.
+  * Allowed values: "edit" or "view". Defaults to "edit".
+  * NOTE: To use a secure "view" mode, it is important to manage the "view key" correctly and pass it to `config.document.key`. If "view" mode is selected with the "edit" key, only the UI will lock the edition and a few changes in the browser's console could allow the user to edit the document. "view" and "edit" keys must use the CryptPad format to guarantee they link to the same document with the correct encryption key.
 * `config.documentType`: string
   * The name of the CryptPad application you want to use to edit this document.
   * This is the path found in the URL when editing a document on CryptPad (for example: `https:cryptpad.fr/pad/...`)
@@ -56,6 +60,9 @@ These examples can be tested here: https://api-examples.dev.cryptpad.net/
   * `config.editorConfig.lang`: string
     * Language code to use on the CryptPad editor (if available)
     * "en" for English, "fr" for French, etc.
+  * `config.editorConfig.user`: object - **optional**
+    * `user.name`: string - Username
+    * `user.jwt`: string - **optional** - A JWT signed by the external platform proving the identity of the user. It will be returned with the `events.onUserlistChange` event.
 * `config.autosave`: number
   * Number of seconds of inactivity before triggering an autosave of the content
   * Only one use will trigger the save during a collaborative session
@@ -69,14 +76,21 @@ These examples can be tested here: https://api-examples.dev.cryptpad.net/
   * `config.events.onNewKey`: function (data, callback) - **optional**
     * **If provided**, your service will let CryptPad generate the session keys for each document directly and you will only be responsible for sharing the session key with the users trying to edit this document
     * **If not provided**, your service will have to generate secure keys (string) and provide them to the users.
-    * Function called when a new key is provided by CryptPad, either because you didn't provide one in `config.document.key` or the one you provided is deprecated.
-      * "data" is a object containing the "new" (generated) key and the "old" (provided) key
+    * Function called when a new keypair is provided by CryptPad, either because you didn't provide a key in `config.document.key` or the one you provided is deprecated.
+      * "data" is a object containing the "new" (generated) key and the "old" (provided) key. It also includes a new "view" key.
       * "callback" is a function that **must be called** with the correct "new" key as argument
+    * This function is **not called** when the API is loaded in "view" mode. Users with "view" rights can't generate a new keypair (edit and view) to store, otherwise they would be able to edit the document.
     * See the **Managing keys** section for further details
   * `config.events.onHasUnsavedChanges`: function (unsaved) - **optional**
     * Function called when the editor detect unsaved changes and correct "saves"
       * "unsaved" is a boolean set to `true` if the editor contains unsaved changes and `false` is everything is saved
     * Note: this function can be used to warn the user about unsaved content if they try to leave the session early. It can also tell them when a save has been performed.
+  * `config.events.onUserlistChange`: function (userlist) - **optional**
+    * Function called when the user list changes (users joining or leaving the document).
+    * The "userlist" object contains:
+      * The **name** provided to the API for the user
+      * A **readOnly** boolean indicated if this API was loaded in view mode or edit mode
+      * If a **jwt** was provided to the API with the user data (config.editorConfig.user), it will also be included in this object
 
 ### Managing keys
 
@@ -87,7 +101,9 @@ Knowing this, the API gives you 2 options to manage the session keys.
 
 #### Option 1: let CryptPad generate the keys
 
-With this API, you can let CryptPad generate the session keys for you. You will still have to **store the key** for each document and **provide it to the users** who have access to this file on your service. A few seconds after all the users have left a collaborative session, the key will be deprecated and will not be usable anymore, even for the same document. This will guarantee that if you remove the access to the document to one of your users, they won't be able to get its content from CryptPad directly if they remember the key.
+With this API, you can let CryptPad generate the session keys for you. You will still have to **store the keys** for each document and **provide it to the users** who have access to this file on your service. A few seconds after all the users have left a collaborative session, the key will be deprecated and will not be usable anymore, even for the same document.
+
+**If a user access to the document is revoked, the CryptPad session will stay alive as long as some users remain connected to it.** To prevent this, your platform can delete the stored key for this document and make the users reload the API.
 
 To enable key management:
 
@@ -108,12 +124,14 @@ To enable key management:
 ```javascript
 const onNewKey = (data, callback) => {
   // new key received
-  const oldKey = data.old;
-  const newKey = data.new;
+  const oldKey = data.old; // Old edit key to avod concurrent updates
+  const newKey = data.new; // New edit key to store
+  const viewKey = data.view; // New view key to store
 
-  // tell your backend to update the key to "newKey" if the current one matches "oldKey"
-  // and return the stored key 
-  updateDocumentKey(oldKey, newKey).then(newKey => {
+  // If the "oldKey" matches the currently stored one, you can safely update
+  // the edit and view keys.
+  // Call back with the new stored "edit" key.
+  updateDocumentKey(oldKey, newKey, viewKey).then(newKey => {
     callback(newKey);
   }).catch(err => {
     // handle error
