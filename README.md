@@ -62,7 +62,6 @@ These examples can be tested here: https://api-examples.dev.cryptpad.net/
     * "en" for English, "fr" for French, etc.
   * `config.editorConfig.user`: object - **optional**
     * `user.name`: string - Username
-    * `user.jwt`: string - **optional** - A JWT signed by the external platform proving the identity of the user. It will be returned with the `events.onUserlistChange` event.
 * `config.autosave`: number
   * Number of seconds of inactivity before triggering an autosave of the content
   * Only one use will trigger the save during a collaborative session
@@ -90,7 +89,6 @@ These examples can be tested here: https://api-examples.dev.cryptpad.net/
     * The "userlist" object contains:
       * The **name** provided to the API for the user
       * A **readOnly** boolean indicated if this API was loaded in view mode or edit mode
-      * If a **jwt** was provided to the API with the user data (config.editorConfig.user), it will also be included in this object
 
 ### Managing keys
 
